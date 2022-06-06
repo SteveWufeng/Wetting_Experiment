@@ -1,0 +1,33 @@
+import meshtools
+import plot
+
+var mb = MeshBuilder()
+
+// Vertices of tetrahedron.
+// (0, 0, 0,), (0, 1, 1), (1, 1, 0), (1, 0, 1)
+var a_vertex = [0,0,0] // 0
+var b_vertex = [0,1,1] // 1
+var c_vertex = [1,1,0] // 2
+var d_vertex = [1,0,1] // 3
+// add vertices to the mesh builder
+mb.addvertex(a_vertex)
+mb.addvertex(b_vertex) 
+mb.addvertex(c_vertex) 
+mb.addvertex(d_vertex)
+
+// add edge
+mb.addedge([0, 1])
+mb.addedge([0, 2])
+mb.addedge([0, 3])
+mb.addedge([1, 2])
+mb.addedge([1, 3])
+mb.addedge([3, 2])
+
+mb.addface([0, 1, 2])
+mb.addface([0, 1, 3])
+mb.addface([0, 2, 3])
+mb.addface([1, 2, 3])
+// build the mesh builder using the build() method
+var mesh = mb.build()
+// the grade param makes the edges more thick
+Show(plotmesh(mesh, grade = [0, 1, 2]))

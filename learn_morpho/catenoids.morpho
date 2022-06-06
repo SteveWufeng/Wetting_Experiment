@@ -1,0 +1,39 @@
+import meshtools
+import plot
+import optimize
+
+
+var r = 1.0 // radius
+var ratio = 0.4 // Separateion to diameter ratio
+var L = 2*r*ratio //separation
+
+var cylindricalMesh = AreaMesh(fn(u, v) [r*cos(u), v, r*sin(u)], 
+                                -Pi...Pi:Pi/10,
+                                -L/2..L/2:L/5,
+                                closed=[true,false]
+                            )
+
+cylindricalMesh.addgrade(1)
+
+// Select the boundary
+var bnd = Selection(cylindricalMesh, boundary=true)
+var g = plotselection(cylindricalMesh, bnd, grade=1)
+g.title = "before"
+Show(g)
+
+// Define the optimization problem
+var problem = OptimizationProblem(cylindricalMesh)
+// Add the Area energy using the built-in Area function
+var area = Area()
+problem.addenergy(area)
+// define optimizer
+var opt = ShapeOptimizer(problem, cylindricalMesh)
+// ask the optimizer to fix the boundary rings
+opt.fix(bnd)
+
+//Minimize!  gradient descent -> use shortest path to reach the lowest energy
+opt.conjugategradient(1000)
+
+g = plotselection(cylindricalMesh, bnd, grade=1)
+g.title = "After"
+Show(g)

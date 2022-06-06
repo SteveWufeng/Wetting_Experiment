@@ -1,0 +1,6 @@
+fn foo(varA="Hello", varB="World") {
+    print varA
+    print varB
+}
+
+foo(varA="Hello", varB="World")

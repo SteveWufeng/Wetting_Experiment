@@ -1,0 +1,39 @@
+import meshtools
+import plot
+import optimize
+
+// center the mesh (this code does not work)
+// var vertextlist = [[0,0,0], [0,1,0], [1,1,0], [1,0,0],
+//                     [0,0,1], [0,1,1], [1,1,1], [1,0,1]]
+
+var vertextlist = [[-0.5,-0.5,-0.5], [-0.5,0.5,-0.5], [0.5,0.5,-0.5], [0.5,-0.5,-0.5],
+                    [-0.5,-0.5,0.5], [-0.5,0.5,0.5], [0.5,0.5,0.5], [0.5,-0.5,0.5]]
+
+var facelist = [[0,1,2,3], [0,1,5,4], [0,4,7,3], 
+                [1,5,6,2], [4,5,6,7], [3,2,6,7]]
+
+var m = PolyhedronMesh(vertextlist, facelis t)
+
+var problem = OptimizationProblem(m)
+// functional objects corresponding to the area and enclosed volume with the surface
+var la = Area()
+var lv = VolumeEnclosed()
+// add them to the problem
+problem.addenergy(la)
+problem.addconstraint(lv)
+
+// performing the optimizations
+var opt = ShapeOptimizer(problem, m)
+opt.relax(100)
+
+var meshRefiner = MeshRefiner([m])
+// refine() method returns a dictionary of regfined objects.
+var refineMap = meshRefiner.refine()
+// using the optimzation problem and shape optimizer object and make update. so they refer to new mesh
+for (el in [problem, opt]) el.update(refineMap)
+// update m to refer to the new refined mesh object
+m = refineMap[m]
+opt.relax(10000)
+
+
+Show(plotmesh(m, grade = [0, 2]))

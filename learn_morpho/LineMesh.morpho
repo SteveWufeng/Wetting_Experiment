@@ -1,0 +1,46 @@
+import meshtools
+import plot
+import optimize
+import constants
+
+// creates a line
+var mesh = LineMesh(fn (t) [sin(t), cos(t), 0], -0.25*Pi..0.5*Pi:2*Pi/50, closed=false)
+
+var bound = Selection(mesh, boundary=true)
+
+var g = (plotselection(mesh, bound, grade=[0, 1]))
+g.title = "Before"
+Show(g)
+
+var problem = OptimizationProblem(mesh)
+// trying to optimize the length
+var le = Length()
+// this is the energy of gravity across the entire rope
+var la = LineIntegral(fn (x) x[1])
+var leq = EquiElement()
+
+var g = 9.8
+var rho = 0.1
+
+problem.addenergy(la, prefactor=rho*g)
+problem.addconstraint(le)
+
+var reg = OptimizationProblem(mesh)
+reg.addenergy(leq)
+
+var opt = ShapeOptimizer(problem, mesh)
+var ropt = ShapeOptimizer(reg, mesh)
+
+opt.fix(bound)
+ropt.fix(bound)
+opt.stepsize = 0.001
+ropt.stepsize = 0.0001
+for (i in 1..200) {
+    opt.relax(500)
+    ropt.relax(100)
+    equiangulate(mesh)
+}
+
+var g = (plotselection(mesh, bound, grade=[0, 1]))
+g.title = "After"
+Show(g)

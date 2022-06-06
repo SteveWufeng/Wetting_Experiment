@@ -1,0 +1,33 @@
+import meshtools
+import plot
+import optimize
+import graphics
+
+//square
+var m = AreaMesh(fn(x, y) [x, y, 0], 
+                        0..1:0.1, // x range from 0 to 1 with step = 0.1
+                        0..1:0.1  // y range from 0 to 1 with step = 0.1
+                        )
+
+//tube
+// var m = AreaMesh(fn (u, v) [v, cos(u), sin(u)], -Pi...Pi:Pi/4,
+//                      -1..1:0.1, closed=[true, false])
+
+m.addgrade(1)
+
+var bound = Selection(m, boundary=true)
+var m_obj = plotselection(m, bound, grade=1)
+m_obj.title = "tube before"                    
+
+// Show(m_obj)
+var problem = OptimizationProblem(m)
+var area = Area()
+problem.addenergy(area)
+
+var opt = ShapeOptimizer(problem, m)
+opt.fix(bound)
+opt.conjugategradient(2.5)
+m_obj = plotselection(m, bound, grade = 1)
+m_obj.title = "after"
+
+Show(m_obj)
