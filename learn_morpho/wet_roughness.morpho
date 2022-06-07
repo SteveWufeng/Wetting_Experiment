@@ -64,8 +64,8 @@ class WettingExperiment {
             graphic = plotmesh(self.cube, grade=[0,1,2])
         }
         // if no custom title is passed in we show all the param as title
-        if (title=nil) {
-            graphic.title = "sigma=${self.sigma}; rho=${self.rho}; g=${self.g}; deltaSigma=${self.deltaSigma}"
+        if (!title) {
+            graphic.title = "sigma=${self.sigma}; rho=${self.rho}; g=${self.g}; deltaSigma=${self.deltaSigma}; r=${self.r}"
         }
         else { 
             graphic.title = title
@@ -276,14 +276,18 @@ class WettingExperiment {
 
 // main
 // surface - surface does not do anything, just shows
-var r = 0.5
+var r = 0.25
 var surface = AreaMesh(fn (u, v) [v, r*cos(u), r*sin(u)-r-0.5], -Pi...Pi:Pi/16, -3..3:0.1, closed=[true, false])
 var surface_graphic = plotmesh(surface, grade = [1,2])
 
 var configs = [
-    [3,0,9.8,1], // does not change on r = 2
-    [3,1,9.8,1], // does not change on r = 2
-    [3,0,9.8,4]  // does not change on r = 2
+    // [3,0,9.8,1], // does not change on r = 2 nor 0.5
+    // [3,1,9.8,1], // does not change on r = 2 nor 0.5
+    // [3,0,9.8,4]  // does not change on r = 2 nor 0.5
+    // [3,1,9.8,10],   // does not goes into the pipe
+    //[3,0,9.8,0.1]    // only one vertex stick to the cylinder, diamond shape
+    [3,0,9.8,-1e8]    // only one vertex stick to the cylinder, diamond shape
+   // [3,0,9.8,10]
     ]
 
 for (conf in configs) {
@@ -297,16 +301,16 @@ for (conf in configs) {
     // cube.show(highlightBound=true)
 
     var refmax = 4
-    var itermax = 1
+    var itermax = 5
     opt.relax(100)
     for (refiter in 1..refmax) {
         //cube.printGradients()
         // opt.conjugategradient(10)
         if (refiter < refmax) {
             print "===Refinement level ${refiter}==="
+            opt.relax(130)
             if (refiter == refmax) break
             cube.refine(showEachIter=false)
-            opt.relax(130)
         }
         for (iter in 1..itermax) {
             cube.regularize(iter)
@@ -318,6 +322,8 @@ for (conf in configs) {
     // print cube.contactAngle()
 
     var cube_graphic = cube.show(highlightBound=true, returning=true)
-    Show(cube_graphic+surface_graphic)
+    var whole_graphic = cube_graphic+surface_graphic
+    whole_graphic.title = cube_graphic.title
+    Show(whole_graphic)
     // Show(cube_graphic)
 }
