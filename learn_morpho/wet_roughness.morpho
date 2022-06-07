@@ -97,7 +97,9 @@ class WettingExperiment {
         
         var refmap=mr.refine()
         // Perform the refinement
-        var newbnd=Selection(refmap[self.cube], boundary=true)
+        // center of the cylinder 00 -r -1/2
+        var r = 2
+        var newbnd=Selection(refmap[self.cube], fn(x,y,z) 2>abs(((z+r+0.5))^2 + (y)^2)^(1/2))
         refmap[self.bottom_bound]=newbnd
 
         // Tell any other objects that refer to the mesh, fields or selections to update their references using refmap
@@ -211,7 +213,8 @@ class WettingExperiment {
             [4,5,7,6]])
         self.cube.addgrade(1)
         // defines the bottom bound
-        self.bottom_bound = Selection(self.cube, boundary=true)
+        var r = 2
+        self.bottom_bound = Selection(self.cube, fn(x,y,z) 2>abs(((z+r+0.5))^2 + (y)^2)^(1/2))
         self.bottom_bound.addgrade(0)
         self.bottom_bound.addgrade(1)
         self.bottom_bound.addgrade(2)
@@ -224,7 +227,6 @@ class WettingExperiment {
         // declare surface tension energy
         var surface_area = Area()
         // declare gravity potential energy
-        // TODO: use Bond Number to determine whether the gravity should be accounted
         var gravitational_potential = AreaIntegral(fn(x) abs(Matrix([0,0,1]).inner(normal())) * (x[2]^2)/2)
         // declare adhesion
         var adhesion = Area()
@@ -277,24 +279,25 @@ var cube = WettingExperiment(3, 1, 9.8, 0.1)
 var opt = cube.getopt()
 var ropt = cube.getropt() // commented out for checking how it would look without regulator
 
-cube.show(hili)
-// var refmax = 4
-// var itermax = 1
-// opt.relax(100)
-// for (refiter in 1..refmax) {
-//     //cube.printGradients()
-//     // opt.conjugategradient(10)
-//     if (refiter < refmax) {
-//         print "===Refinement level ${refiter}==="
-//         opt.relax(130)
-//         if (refiter == refmax) break
-//         cube.refine(showEachIter=true)
-    // }
-    // for (iter in 1..itermax) {
-    //     cube.regularize(iter)
-    //     // cube.printGradients()
-    // }
-// }
+// cube.show(highlightBound=true)
+
+var refmax = 4
+var itermax = 1
+opt.relax(100)
+for (refiter in 1..refmax) {
+    //cube.printGradients()
+    // opt.conjugategradient(10)
+    if (refiter < refmax) {
+        print "===Refinement level ${refiter}==="
+        opt.relax(130)
+        if (refiter == refmax) break
+        cube.refine(showEachIter=true)
+    }
+    for (iter in 1..itermax) {
+        cube.regularize(iter)
+        // cube.printGradients()
+    }
+}
 
 // cube.show(highlightBound=true)
 // print cube.contactAngle()
