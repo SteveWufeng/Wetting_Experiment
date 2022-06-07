@@ -211,7 +211,7 @@ class WettingExperiment {
             [4,5,7,6]])
         self.cube.addgrade(1)
         // defines the bottom bound
-        self.bottom_bound = Selection(self.cube, fn(x,y,z) z<-0.4)
+        self.bottom_bound = Selection(self.cube, boundary=true)
         self.bottom_bound.addgrade(0)
         self.bottom_bound.addgrade(1)
         self.bottom_bound.addgrade(2)
@@ -277,24 +277,24 @@ var cube = WettingExperiment(3, 1, 9.8, 0.1)
 var opt = cube.getopt()
 var ropt = cube.getropt() // commented out for checking how it would look without regulator
 
-
-var refmax = 4
-var itermax = 1
-opt.relax(100)
-for (refiter in 1..refmax) {
-    //cube.printGradients()
-    // opt.conjugategradient(10)
-    if (refiter < refmax) {
-        print "===Refinement level ${refiter}==="
-        opt.relax(130)
-        if (refiter == refmax) break
-        cube.refine(showEachIter=false)
-    }
+cube.show(hili)
+// var refmax = 4
+// var itermax = 1
+// opt.relax(100)
+// for (refiter in 1..refmax) {
+//     //cube.printGradients()
+//     // opt.conjugategradient(10)
+//     if (refiter < refmax) {
+//         print "===Refinement level ${refiter}==="
+//         opt.relax(130)
+//         if (refiter == refmax) break
+//         cube.refine(showEachIter=true)
+    // }
     // for (iter in 1..itermax) {
     //     cube.regularize(iter)
     //     // cube.printGradients()
     // }
-}
+// }
 
 // cube.show(highlightBound=true)
 // print cube.contactAngle()
