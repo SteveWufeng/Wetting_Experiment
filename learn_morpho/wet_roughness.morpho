@@ -32,7 +32,7 @@ class WettingExperiment {
         @param rho: double                // density of the liquid
         @param g: double                  // gravity in m/s^2
         @param deltaSigma: double         // prefactor for adhesion
-        @param r: double                  // radius of the surface -- we are testing on a cylinder(6/7 )
+        @param r: double                  // radius of the surface -- we are testing on a cylinder(jun/7)
     */
     init(sigma, rho, g, deltaSigma, r) {
         self.sigma = sigma
@@ -106,6 +106,8 @@ class WettingExperiment {
         // Perform the refinement
         // center of the cylinder 00 -r -1/2
         var newbnd=Selection(refmap[self.cube], fn(x,y,z) self.delta_cylinder>abs(((z+self.r+0.5))^2 + (y)^2)^(1/2)-self.r)
+        newbnd.addgrade(1)
+        newbnd.addgrade(2)
         self.delta_cylinder = self.delta_cylinder/2
         refmap[self.bottom_bound]=newbnd
 
@@ -231,7 +233,7 @@ class WettingExperiment {
         // initialize optimization problem
         self.problem = OptimizationProblem(self.cube)
         // declare surface tension energy
-        var delta_sigma_minus_sigma = self.deltaSigma - self.sigma // should be negative
+        var deltaSigma_minus_sigma = self.deltaSigma - self.sigma // should be negative
         var surface_area_bottom = Area()
         var surface_area_air = Area()
         // declare gravity potential energy
@@ -242,7 +244,7 @@ class WettingExperiment {
         var volume_constraint = VolumeEnclosed()
         
         // add all energy and constraint to the problem
-        self.problem.addenergy(surface_area_bottom, selection=self.bottom_bound, prefactor=delta_sigma_minus_sigma)
+        self.problem.addenergy(surface_area_bottom, selection=self.bottom_bound, prefactor=deltaSigma_minus_sigma)
         self.problem.addenergy(surface_area_air, prefactor=self.sigma)
         self.problem.addenergy(gravitational_potential, prefactor=self.rho*self.g)
         self.problem.addconstraint(volume_constraint)
@@ -276,7 +278,7 @@ class WettingExperiment {
 
 // main
 // surface - surface does not do anything, just shows
-var r = 0.25
+var r = 0.5
 var surface = AreaMesh(fn (u, v) [v, r*cos(u), r*sin(u)-r-0.5], -Pi...Pi:Pi/16, -3..3:0.1, closed=[true, false])
 var surface_graphic = plotmesh(surface, grade = [1,2])
 
@@ -286,7 +288,7 @@ var configs = [
     // [3,0,9.8,4]  // does not change on r = 2 nor 0.5
     // [3,1,9.8,10],   // does not goes into the pipe
     //[3,0,9.8,0.1]    // only one vertex stick to the cylinder, diamond shape
-    [3,0,9.8,-1e8]    // only one vertex stick to the cylinder, diamond shape
+    [3,0,9.8,-1]    // only one vertex stick to the cylinder, diamond shape
    // [3,0,9.8,10]
     ]
 
@@ -296,19 +298,20 @@ for (conf in configs) {
     var cube = WettingExperiment(conf[0], conf[1], conf[2], conf[3], r)
 
     var opt = cube.getopt()
+    opt.quiet=false
+    opt.ctol = 1e-8
     var ropt = cube.getropt() // commented out for checking how it would look without regulator
 
     // cube.show(highlightBound=true)
 
     var refmax = 4
-    var itermax = 5
+    var itermax = 3
     opt.relax(100)
     for (refiter in 1..refmax) {
         //cube.printGradients()
-        // opt.conjugategradient(10)
         if (refiter < refmax) {
             print "===Refinement level ${refiter}==="
-            opt.relax(130)
+            opt.relax(100)
             if (refiter == refmax) break
             cube.refine(showEachIter=false)
         }
