@@ -278,18 +278,19 @@ class WettingExperiment {
 
 // main
 // surface - surface does not do anything, just shows
-var r = 0.5
+var r = 5
 var surface = AreaMesh(fn (u, v) [v, r*cos(u), r*sin(u)-r-0.5], -Pi...Pi:Pi/16, -3..3:0.1, closed=[true, false])
 var surface_graphic = plotmesh(surface, grade = [1,2])
 
 var configs = [
-    // [3,0,9.8,1], // does not change on r = 2 nor 0.5
-    // [3,1,9.8,1], // does not change on r = 2 nor 0.5
-    // [3,0,9.8,4]  // does not change on r = 2 nor 0.5
-    // [3,1,9.8,10],   // does not goes into the pipe
-    //[3,0,9.8,0.1]    // only one vertex stick to the cylinder, diamond shape
-    [3,0,9.8,-1]    // only one vertex stick to the cylinder, diamond shape
-   // [3,0,9.8,10]
+    // [3,0,9.8,1], 
+    // [6,0,9.8,1], 
+    // [3,0,9.8,4],
+    // [3,0,9.8,10],   
+    // [3,0,9.8,15],
+    // [3,0,9.8,0.1],
+    // [3,0,9.8,-1],
+    [3,0,9.8,1]
     ]
 
 for (conf in configs) {
@@ -299,25 +300,30 @@ for (conf in configs) {
 
     var opt = cube.getopt()
     opt.quiet=false
-    opt.ctol = 1e-8
     var ropt = cube.getropt() // commented out for checking how it would look without regulator
 
     // cube.show(highlightBound=true)
 
+
     var refmax = 4
     var itermax = 3
-    opt.relax(100)
+    var relaxCount = 100
+    opt.relax(10)
     for (refiter in 1..refmax) {
         //cube.printGradients()
         if (refiter < refmax) {
             print "===Refinement level ${refiter}==="
-            opt.relax(100)
+            opt.relax(relaxCount)
             if (refiter == refmax) break
             cube.refine(showEachIter=false)
+            opt.stepsize = opt.stepsize/(1.5)
+            relaxCount = relaxCount*(r+1)
+            if (relaxCount > 2500) {relaxCount = 2500}
         }
-        for (iter in 1..itermax) {
-            cube.regularize(iter)
-            // cube.printGradients()
+        if (refiter < refmax-2) {
+            for (iter in 1..itermax) {
+                cube.regularize(iter)
+            }
         }
     }
 
