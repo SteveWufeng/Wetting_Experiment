@@ -241,6 +241,7 @@ class WettingExperiment {
 
         // add constraint that makes all vertices stays at z=0 regulates that so all bounds will stay at z=0
         self.problem.addlocalconstraint(ScalarPotential(fn (x,y,z) z, fn(x,y,z) Matrix([0,0,1])), selection=self.bottom_bound)
+        
     }
 }
 
