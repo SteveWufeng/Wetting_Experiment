@@ -145,35 +145,54 @@ class WettingExperiment {
     */
     contactAngle() {
         var bndLines = self.bottom_bound.idlistforgrade(1)
+        var boundFaces = self.bottom_bound.idlistforgrade(2)
+        var boundVertices = self.bottom_bound.idlistforgrade(0)
         var lineToFace = self.cube.connectivitymatrix(2,1)
         var faceToVertex = self.cube.connectivitymatrix(0,2)
         var contactangle = 0
-
+        var contactFaces = []
+        var contactAngles = []
         for (line in bndLines) { // for each line in the boundary
-            var face = lineToFace.rowindices(line) // find the face it is attached to
-            if (face.count()>1) {
-                // throw(Error("NotBndLine","This line is connected to more than one face, its not on the boundary"))
-                print "bad line, not on bnd"
+            var faces = lineToFace.rowindices(line) // find the face it is attached to
+            // if (face.count()>1) {
+            //     // throw(Error("NotBndLine","This line is connected to more than one face, its not on the boundary"))
+            //     print "bad line, not on bnd"
+            // }
+            for (face in faces) {
+                if (!boundFaces.ismember(face) && !contactFaces.ismember(face)) {
+                    contactFaces.append(face)
+                }
             }
-            var vertexNum = faceToVertex.rowindices(face[0]) // find the vertices on that face
-            var r0 = self.cube.vertexposition(vertexNum[0])
-            var r1 = self.cube.vertexposition(vertexNum[1])
-            var r2 = self.cube.vertexposition(vertexNum[2])
-
-            var boundrypts = [] // find the two points on the z = 0 plane
-            var notboundrypt
-            if (abs(r0[2]) < 1e-4) boundrypts.append(r0) else notboundrypt = r0
-            if (abs(r1[2]) < 1e-4) boundrypts.append(r1) else notboundrypt = r1
-            if (abs(r2[2]) < 1e-4) boundrypts.append(r2) else notboundrypt = r2
-            var midpt = (boundrypts[0]+boundrypts[1])/2
-
-            var contactVector = notboundrypt - midpt;
-
-            contactangle += (Pi - acos(midpt.inner(contactVector)/(midpt.norm()*contactVector.norm())))/ bndLines.count()
         }
-        
-        return contactangle / Pi*180
-    }
+
+        for (face in contactFaces) {
+            var vertexNum = faceToVertex.rowindices(face) // find the vertices on that face
+            var pTop
+            var pSurface = []
+            for (vertex in vertexNum) {
+                if (boundVertices.ismember(vertex)) { 
+                    pSurface.append(vertex)
+                }
+                else {
+                    pTop = vertex
+                }
+            } 
+            var pMid = (1/2)*(self.cube.vertexposition(pSurface[0]) + self.cube.vertexposition(pSurface[1]))
+            var vFaceTangent = self.cube.vertexposition(pTop) - pMid
+            var vRad = pMid - Matrix([pMid[0], 0, -0.5-self.r])
+            var vedge = (self.cube.vertexposition(pSurface[0]) - self.cube.vertexposition(pSurface[1]))
+            var vSurfaceTangent = self._getCross(vedge, vRad)
+            var vContactRadius = pMid - Matrix([0, 0, -0.5]) 
+            if (vSurfaceTangent.inner(vContactRadius) < 0) {
+                vSurfaceTangent = -vSurfaceTangent
+            }
+            var contactRadian = Pi - acos(vFaceTangent.inner(vSurfaceTangent)/(vFaceTangent.norm()*vSurfaceTangent.norm()))
+            var contactDegree = contactRadian/Pi*180
+            contactAngles.append(contactDegree)
+            contactangle += contactDegree/contactFaces.count()
+        }
+        return [contactAngles, contactangle]
+      }
 
     /* 
     PRIVATE METHOD: Set up self.opt and self.ropt. User can customize the optimizer
@@ -298,7 +317,7 @@ for (conf in configs) {
     var cube = WettingExperiment(conf[0], conf[1], conf[2], conf[3], r)
 
     var opt = cube.getopt()
-    opt.quiet=false
+    opt.quiet=true
     var ropt = cube.getropt() // commented out for checking how it would look without regulator
 
     // cube.show(highlightBound=true)
@@ -315,9 +334,9 @@ for (conf in configs) {
             opt.relax(relaxCount)
             if (refiter == refmax) break
             cube.refine(showEachIter=true)
-            opt.stepsize = opt.stepsize
-            // relaxCount = relaxCount
-            // if (relaxCount > 1000) {relaxCount = 1000}
+            opt.stepsize = opt.stepsize/1.2
+            relaxCount = relaxCount*(r+1)
+            if (relaxCount > 1000) {relaxCount = 1000}
         }
         if (refiter < refmax-2) {
             for (iter in 1..itermax) {
@@ -327,7 +346,9 @@ for (conf in configs) {
     }
 
     // cube.show(highlightBound=true)
-    // print cube.contactAngle()
+    var value = cube.contactAngle()
+    print value[0]
+    print value[1]
 
     var cube_graphic = cube.show(highlightBound=true, returning=true)
     var whole_graphic = cube_graphic+surface_graphic
