@@ -154,10 +154,7 @@ class WettingExperiment {
         var contactAngles = []
         for (line in bndLines) { // for each line in the boundary
             var faces = lineToFace.rowindices(line) // find the face it is attached to
-            // if (face.count()>1) {
-            //     // throw(Error("NotBndLine","This line is connected to more than one face, its not on the boundary"))
-            //     print "bad line, not on bnd"
-            // }
+
             for (face in faces) {
                 if (!boundFaces.ismember(face) && !contactFaces.ismember(face)) {
                     contactFaces.append(face)
@@ -317,7 +314,7 @@ for (conf in configs) {
     var cube = WettingExperiment(conf[0], conf[1], conf[2], conf[3], r)
 
     var opt = cube.getopt()
-    opt.quiet=true
+    opt.quiet=false
     var ropt = cube.getropt() // commented out for checking how it would look without regulator
 
     // cube.show(highlightBound=true)
@@ -333,7 +330,7 @@ for (conf in configs) {
             print "===Refinement level ${refiter}==="
             opt.relax(relaxCount)
             if (refiter == refmax) break
-            cube.refine(showEachIter=true)
+            cube.refine(showEachIter=false)
             opt.stepsize = opt.stepsize/1.2
             relaxCount = relaxCount*(r+1)
             if (relaxCount > 1000) {relaxCount = 1000}
