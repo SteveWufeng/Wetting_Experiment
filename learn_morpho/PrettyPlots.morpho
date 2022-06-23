@@ -19,20 +19,22 @@ class PrettyPrinter {
     }
     // Make a plot from the a object stored in the printer
     makePlot() {
+        var surface = PolyhedronMesh([[-2.5,2.5,-0.5],[2.5,2.5,-0.5],[-2.5,-2.5,-0.5],[2.5,-2.5,-0.5]],[[0,2,3,1]])
         if (self.selection != nil) {
             if (self.mesh == nil) {
             var err = Error("PrettyPrinterNoMesh", "Please supply the Pretty Printer with a Mesh if you wish to use a selection")
             err.throw()
             }
-            self.graphic += plotselection(self.mesh,self.selection,grade = self.grade)
+            self.graphic = plotselection(self.mesh,self.selection,grade = self.grade)
         } else if (self.field != nil) {
-            self.graphic += plotfield(self.field)
+            self.graphic = plotfield(self.field)
         } else if (self.mesh != nil) {
-            self.graphic += plotmesh(self.mesh,grade = self.grade)
+            self.graphic = plotmesh(self.mesh,grade = self.grade)
         } else {
             var err = Error("PrettyPrinterNoPlotable", "Please supply the Pretty Printer with a Plotable object")
             err.throw()
         }
+        self.graphic += plotmesh(surface)
     }
     // saves a plot to disk with povray
     // filename is the name of the .png
@@ -60,10 +62,10 @@ class PrettyPrinter {
     // framerate is the number of frames per seoncd
     // dist is how far out the camera is
     // camera is where the camera is placed (it looks at [0,0,0])
-    animateMinimization(optimizer,filename,TotalSteps,protocal = nil,duration = 5, framerate = 30, dist = 5,camera = nil){
+    animateMinimization(optimizer,filename,TotalSteps,protocal = nil,duration = 3, framerate = 30, dist = 10,camera = nil){
         var nframes = ceil(framerate * duration)
         var StepPerFrame = ceil(TotalSteps/nframes)
-        if (camera == nil) camera = Matrix([1,0,1])
+        if (camera == nil) camera = Matrix([0,1,-0.5])
         if (protocal == nil) protocal = optimizer.relax
         
         self.save("frame_0", dist = dist, camera = camera)

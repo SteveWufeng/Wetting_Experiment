@@ -79,31 +79,52 @@ class Minimizer {
         self.experiment = experiment
     }
     go(procedure) {
+        // remove later
+        var surface = PolyhedronMesh([[-2.5,2.5,-0.5],[2.5,2.5,-0.5],[-2.5,-2.5,-0.5],[2.5,-2.5,-0.5]],[[0,2,3,1]])
+        var graphic2 = plotmesh(surface, grade=[0,1,2])
+        self.prettyPrinter = PrettyPrinter(mesh=self.experiment.getMesh(), graphic=graphic2, grade = 2)
+        var dist = 10
+        var camera = Matrix([0,1,-0.5])
+        self.prettyPrinter.save("frame_0", dist = dist, camera = camera)
+        var count = 1
+        // block above to be removed
+
         for (step in procedure){
             if (step[0]=="relax") {
                     print "relaxing ${step[1]}" 
-                    self.experiment.getOpt().relax(step[1])
+                    for (i in 1..step[1] / 25){
+                        self.experiment.getOpt().relax(25)
+                        self.prettyPrinter.save("frame_${count}", dist = dist, camera = camera)
+                        count+=1
+                    }
                     self.experiment.getOpt().stepsize = self.experiment.getOpt().stepsize/1.5
+                    self.prettyPrinter.mesh = self.experiment.getMesh()
             } else if (step[0]=="refine") {
                     // self.experiment.show()
 
                     print("refining")
                     self.refine()
                     // self.experiment.show()
-
+                    self.prettyPrinter.mesh = self.experiment.getMesh()
             } else if (step[0] == "reguarlize") {
                     print("reguarlizing")
-                    self.experiment.getRegualrizer().linesearch(step[1])
-                    equiangulate(self.experiment.getMesh())
+                    for (i in 1..step[1]){
+                        self.experiment.getRegualrizer().linesearch(1)
+                        equiangulate(self.experiment.getMesh())
+                        self.prettyPrinter.save("frame_${count}", dist = dist, camera = camera)
+                        count+=1
+                    }
+                    self.prettyPrinter.mesh = self.experiment.getMesh()
             }
         }
+    self.prettyPrinter.convertToMP4(26,"frame_","minimize_longer.mp4")
     }
     refine(){
         var mr=MeshRefiner([self.experiment.getMesh(), self.experiment.getSelections()])
         var refmap=mr.refine()
         self.experiment.updateFromRefmap(refmap)
+        self.prettyPrinter.mesh = self.experiment.getMesh()
     }
-
 }
 
 
@@ -145,7 +166,7 @@ class WettingExperiment {
         //create the shape optizmizer
         self.opt = ShapeOptimizer(self.problem,self.mesh)
         self.opt.stepsize = 1e-3
-        self.opt.quiet = false
+        self.opt.quiet = true
 
 
         self.regproblem = OptimizationProblem(self.mesh)
@@ -310,20 +331,21 @@ class ExpermentManager {
         myDroplet.minimizationProcedure = [["relax",1000],["refine"], ["reguarlize", 2],
                                             ["relax",1000],["refine"], ["reguarlize", 2],
                                             ["relax",1000],["refine"], ["reguarlize", 2],
-                                            ["relax",1000]]
+                                            ["relax",500]]
         myDroplet.setupProblem()
-        // myDroplet.minimize()
+        myDroplet.minimize()
         var surface = PolyhedronMesh([[-2.5,2.5,-0.5],[2.5,2.5,-0.5],[-2.5,-2.5,-0.5],[2.5,-2.5,-0.5]],[[0,2,3,1]])
         var graphic2 = plotmesh(surface, grade=[0,1, 2])
         // Show(plotmesh(myDroplet.getMesh()))
-        // Show(plotselection(myDroplet.getMesh(), myDroplet.bottomBound) + graphic2)
+        Show(plotselection(myDroplet.getMesh(), myDroplet.bottomBound) + graphic2)
         var angle = myDroplet.getContactAngle()
         print angle[0]
         print angle[1]
 
         // prett plots
-        var prettyPrinter = PrettyPrinter(mesh=myDroplet.getMesh(), graphic=graphic2, grade = 2)
-        prettyPrinter.animate("droplet.mp4")
+        // var prettyPrinter = PrettyPrinter(mesh=myDroplet.getMesh(), graphic=graphic2, grade = 2)
+        // prettyPrinter.animateMinimization(myDroplet.getOpt(), "minimize.mp4", 4000)
+        // prettyPrinter.animate("droplet.mp4")
     }
     testtetra() {
         var myDroplet = WettingExperiment(1, 0.5, PlanarSurface())
