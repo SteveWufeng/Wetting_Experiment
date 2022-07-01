@@ -318,10 +318,13 @@ class ExpermentManager {
                                             ["relax",2000],["refine"],
                                             ["relax",3000], ["regularize", 3]]
         myDroplet.setupProblem()
-        myDroplet.minimize()
+        // myDroplet.minimize()
         // myDroplet.show(highlightBound = true)
-        var surface = PolyhedronMesh([[-2.5,2.5,-0.5],[2.5,2.5,-0.5],[-2.5,-2.5,-0.5],[2.5,-2.5,-0.5]],[[0,2,3,1]])
-        var graphic2 = plotmesh(surface, grade=[2])
+        var surface = PolyhedronMesh([[-2.5,2.5,-0.5],[2.5,2.5,-0.5],[-2.5,-2.5,-0.5],[2.5,-2.5,-0.5],
+                        [-2.5,2.5,-1],[2.5,2.5,-1],[-2.5,-2.5,-1],[2.5,-2.5,-1]],
+                        [[0,1,3,2], [0,1,5,4], [0,2,6,4], [7,3,2,6],
+                        [1,3,7,5], [4,6,7,5]])
+        var graphic2 = plotmesh(surface, grade=[0,1,2])
 
         var angle = myDroplet.getContactAngle()
         print angle[0]
@@ -330,22 +333,44 @@ class ExpermentManager {
         var g = plotmesh(myDroplet.getMesh()) + graphic2
         g.background = White
 
-        var pov = POVRaytracer(g)
-        pov.viewpoint=Matrix([0, -2, 0.5])
-        pov.viewangle=35
+        var surface = PolyhedronMesh([[-2.5,2.5,-0.5],[2.5,2.5,-0.5],[-2.5,-2.5,-0.5],[2.5,-2.5,-0.5],
+                        [-2.5,2.5,-1],[2.5,2.5,-1],[-2.5,-2.5,-1],[2.5,-2.5,-1]],
+                        [[0,1,3,2], [0,1,5,4], [0,2,6,4], [7,3,2,6],
+                        [1,3,7,5], [4,6,7,5]])
+        var graphic2 = plotmesh(surface, grade=[0,1,2])
+        var pov = POVRaytracer(graphic2)
+        pov.viewpoint=Matrix([0, -4, -5])
+        pov.viewangle=0
         pov.light=[Matrix([10,10,10]), Matrix([-10,-10,10])]
-        pov.render("${deltaSigma}_${angle[1]}.pov", display=true, quiet=true)
+
+        // ** deltaSigma = -0.25
+        // ** angle[0] = [82.6, 88.8, 85.94, 105.72]
+        // ** angle[1] = 71
+        // var pov = POVRaytracer(g)
+        // pov.render("${deltaSigma}_${angle[1]}.pov", display=true, quiet=false)
         
-        var csv = File("data.csv", "append")
-        csv.write("d${deltaSigma},${angle[1]},\"${angle[0]}\"\n")
+        /* #1   throwing error in the render() method in the POVRaytracer class at morpho/morpho5/modules/povray.morpho
+                line 164 executed command in shell "povray -0.25_90.pov +A +W2048 +H1536"
+                Error message: Failed to parse command-line option
+                Error reason: "-0.25_90.pov" is not a valid command-line option, it should be a filename
+                Fix Applied: add the prefix "./" to before the filename parameter
+
+            #2  throwing error in the render() method in the POVRaytracer class at morpho/morpho5/modules/povray.morpho
+                line 166 executed command in shell "open ${out}.png"
+                Error message: xdg-open: file '-0.png' does not exist
+                Error reason: Latent error - line 165 
+                Fix Applied: use loop to generate the filename
+        */
+        // var csv = File("data.csv", "append")
+        // csv.write("${deltaSigma},${angle[1]},\"${angle[0]}\"")
 
         // Show(g)
     }
 }
 
 var myExp = ExpermentManager()
-// myExp.exp3(0.205)
+myExp.exp3(-0.24)
 
-for (i in -1..1:0.02) {
-    myExp.exp3(i)
-}
+// for (i in -1..1:0.02) {
+// myExp.exp3(i)
+// }

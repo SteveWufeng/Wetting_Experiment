@@ -58,10 +58,10 @@ class WettingExperiment {
         // if high light bound is true, we highlight the bottom bound by default. highl light specified other wise
         if (highlightBound) {
             if (!bound) {bound = self.bottom_bound}
-            graphic = plotselection(self.cube, bound, grade=[0,1,2])
+            graphic = plotselection(self.cube, bound)
         }
         else {
-            graphic = plotmesh(self.cube, grade=[0,1,2])
+            graphic = plotmesh(self.cube )
         }
         // if no custom title is passed in we show all the param as title
         if (!title) {
@@ -333,7 +333,7 @@ for (conf in configs) {
             cube.refine(showEachIter=false)
             opt.stepsize = opt.stepsize/1.2
             relaxCount = relaxCount*(r+1)
-            if (relaxCount > 1000) {relaxCount = 1000}
+            if (relaxCount > 500) {relaxCount = 500}
         }
         if (refiter < refmax-2) {
             for (iter in 1..itermax) {
@@ -347,7 +347,7 @@ for (conf in configs) {
     print value[0]
     print value[1]
 
-    var cube_graphic = cube.show(highlightBound=true, returning=true)
+    var cube_graphic = cube.show(highlightBound=false, returning=true)
     var whole_graphic = cube_graphic+surface_graphic
     whole_graphic.title = cube_graphic.title
     Show(whole_graphic)
